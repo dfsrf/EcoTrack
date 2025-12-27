@@ -7,27 +7,29 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "lint": "eslint . --ext vue,js,jsx,cjs,mjs --fix --ignore-path .gitignore"
+    "lint": "eslint . --ext vue,js,jsx,cjs,mjs --fix --ignore-path .gitignore",
+    "deploy": "npm run build && gh-pages -d dist"
   },
   "dependencies": {
-    "vue": "^3.4.21",
-    "vue-router": "^4.3.0",
-    "pinia": "^2.1.7",
-    "echarts": "^5.5.0",
-    "vue-echarts": "^6.6.0",
-    "element-plus": "^2.6.1",
     "@element-plus/icons-vue": "^2.3.1",
-    "dayjs": "^1.11.10"
+    "dayjs": "^1.11.10",
+    "echarts": "^5.5.0",
+    "element-plus": "^2.6.1",
+    "pinia": "^2.1.7",
+    "vue": "^3.4.21",
+    "vue-echarts": "^6.6.0",
+    "vue-router": "^4.3.0"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^5.0.4",
-    "vite": "^5.2.0",
+    "@vue/eslint-config-prettier": "^9.0.0",
+    "autoprefixer": "^10.4.18",
     "eslint": "^8.57.0",
     "eslint-plugin-vue": "^9.22.0",
-    "@vue/eslint-config-prettier": "^9.0.0",
+    "gh-pages": "^6.3.0",
+    "postcss": "^8.4.35",
     "prettier": "^3.2.5",
     "tailwindcss": "^3.4.1",
-    "autoprefixer": "^10.4.18",
-    "postcss": "^8.4.35"
+    "vite": "^5.2.0"
   }
 }
