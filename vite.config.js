@@ -7,8 +7,7 @@ import autoprefixer from 'autoprefixer'
 export default defineConfig({
   base: '/EcoTrack/', 
   build: {
-    outDir: 'dist',
-    assetsDir: 'assets', // 这会使构建的资源都进入 `dist/assets/`
+    outDir: 'dist', // 这会使构建的资源都进入 `dist/assets/`
     // 确保资源文件被正确命名和放置
   },// 修改基础路径
   server: {
