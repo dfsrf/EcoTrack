@@ -12,7 +12,7 @@
           <el-option
             v-for="(info, type) in categoryOptions"
             :key="type"
-            :label="`${info.icon} ${type}`"
+            :label="`${info.icon} ${info.type}`"
             :value="type"
           />
         </el-select>
@@ -53,12 +53,18 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, nextTick } from 'vue'
 import { useCarbonCalculator } from '@/composables/useCarbonCalculator'
 import { useRecordsStore } from '@/stores/records'
 import { ElMessage } from 'element-plus'
 
-const emit = defineEmits('submit')
+const emit = defineEmits(['success', 'cancel'])
+const props = defineProps({
+  initialCategory: {
+    type: String,
+    default: ''
+  }
+})
 
 const recordsStore = useRecordsStore()
 const { carbonFactors, calculateCarbon } = useCarbonCalculator()
@@ -67,6 +73,14 @@ const formData = ref({
   type: '',
   amount: 0
 })
+
+// 监听对话框显示状态，重置表单
+const resetForm = () => {
+  formData.value = {
+    type: '',
+    amount: 0
+  }
+}
 
 // 获取所有类型的选项（排除分类）
 const categoryOptions = computed(() => {
@@ -77,7 +91,9 @@ const categoryOptions = computed(() => {
       options[`${category}-${type}`] = {
         ...info,
         category: category,
-        type: type
+        type: type,
+        unit: info.unit || '数量',
+        hint: `请输入${info.unit?.split('/')[0] || '数量'}`
       }
     })
   })
@@ -111,6 +127,32 @@ const handleTypeChange = () => {
   formData.value.amount = 0
 }
 
+// 初始化时根据category设置默认选项
+const initializeFromCategory = () => {
+  if (props.initialCategory && carbonFactors[props.initialCategory]) {
+    // 获取该分类下的第一个选项作为默认值
+    const firstType = Object.keys(carbonFactors[props.initialCategory])[0]
+    if (firstType) {
+      const optionKey = `${props.initialCategory}-${firstType}`
+      formData.value.type = optionKey
+    }
+  }
+}
+
+// 监听category变化
+watch(() => props.initialCategory, (newCategory, oldCategory) => {
+  if (newCategory) {
+    if (newCategory !== oldCategory) {
+      // 重置表单并设置默认选项
+      resetForm()
+    }
+    // 延迟设置默认选项，确保重置完成且组件已渲染
+    setTimeout(() => {
+      initializeFromCategory()
+    }, 50)
+  }
+}, { immediate: true })
+
 // 提交表单
 const handleSubmit = () => {
   if (!formData.value.type || !formData.value.amount) return
@@ -135,6 +177,7 @@ const handleSubmit = () => {
     amount: 0
   }
 
+  emit('success', record)
   ElMessage.success('快速记录成功！')
   emit('submit', record)
 }

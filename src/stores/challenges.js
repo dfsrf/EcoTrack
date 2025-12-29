@@ -1,7 +1,37 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
+import { useUserStore } from './user'
 
 export const useChallengesStore = defineStore('challenges', () => {
+  const userStore = useUserStore()
+  
+  // 获取用户特定的存储键
+  const getUserStorageKey = () => {
+    const userId = userStore.userInfo?.id || 'anonymous'
+    return `ecotrack_challenges_${userId}`
+  }
+  
+  // 从localStorage获取用户挑战数据
+  const getUserChallenges = () => {
+    try {
+      const key = getUserStorageKey()
+      const stored = localStorage.getItem(key)
+      return stored ? JSON.parse(stored) : []
+    } catch (error) {
+      console.error('获取用户挑战失败:', error)
+      return []
+    }
+  }
+  
+  // 保存用户挑战数据到localStorage
+  const saveUserChallenges = (challenges) => {
+    try {
+      const key = getUserStorageKey()
+      localStorage.setItem(key, JSON.stringify(challenges))
+    } catch (error) {
+      console.error('保存用户挑战失败:', error)
+    }
+  }
   // 状态
   const challenges = ref([
     {
@@ -66,28 +96,33 @@ export const useChallengesStore = defineStore('challenges', () => {
     }
   ])
 
-  const userChallenges = ref([
-    {
-      id: 'user_challenge_001',
-      challengeId: 'challenge_001',
-      startDate: '2024-03-10',
-      progress: 5,
-      status: 'in_progress', // 'not_started', 'in_progress', 'completed', 'expired'
-      completedDays: [1, 2, 3, 4, 5], // 完成的天数
-      lastCheckInDate: '2024-03-15', // 最后打卡日期
-      dailyCheckIns: ['2024-03-11', '2024-03-12', '2024-03-13', '2024-03-14', '2024-03-15'] // 每日打卡记录
-    },
-    {
-      id: 'user_challenge_002',
-      challengeId: 'challenge_003',
-      startDate: '2024-03-14',
-      progress: 1,
-      status: 'in_progress',
-      completedDays: [1],
-      lastCheckInDate: '2024-03-14',
-      dailyCheckIns: ['2024-03-14']
+  let currentUserId = userStore.userInfo?.id || 'anonymous'
+  const userChallenges = ref(getUserChallenges()) // 立即加载当前用户的挑战数据
+
+  // 初始化用户挑战数据
+  const loadUserChallenges = () => {
+    const newChallenges = getUserChallenges()
+    userChallenges.value = newChallenges
+  }
+
+  // 检查用户ID是否改变并重新加载
+  const checkAndReloadUserData = () => {
+    const newUserId = userStore.userInfo?.id || 'anonymous'
+    if (newUserId !== currentUserId) {
+      currentUserId = newUserId
+      loadUserChallenges()
     }
-  ])
+  }
+
+  // 监听用户状态变化
+  const initChallengesStore = () => {
+    // 监听用户状态变化，但只在用户ID改变时重新加载数据
+    const unwatch = userStore.$subscribe(() => {
+      checkAndReloadUserData()
+    })
+    
+    return unwatch
+  }
 
   // 计算属性
   const availableChallenges = computed(() => {
@@ -148,6 +183,7 @@ export const useChallengesStore = defineStore('challenges', () => {
     }
 
     userChallenges.value.push(newUserChallenge)
+    saveUserChallenges(userChallenges.value) // 自动保存
     return { success: true, data: newUserChallenge }
   }
 
@@ -179,6 +215,7 @@ export const useChallengesStore = defineStore('challenges', () => {
       // 检查是否完成挑战
       if (userChallenge.progress >= challenge.duration) {
         userChallenge.status = 'completed'
+        saveUserChallenges(userChallenges.value) // 保存
         return { 
           success: true, 
           completed: true, 
@@ -187,6 +224,7 @@ export const useChallengesStore = defineStore('challenges', () => {
       }
     }
 
+    saveUserChallenges(userChallenges.value) // 自动保存
     return { success: true, completed: false }
   }
 
@@ -213,6 +251,8 @@ export const useChallengesStore = defineStore('challenges', () => {
     joinChallenge,
     updateChallengeProgress,
     quitChallenge,
-    getChallengeById
+    getChallengeById,
+    loadUserChallenges,
+    initChallengesStore
   }
 })

@@ -147,14 +147,62 @@
 
 <script setup>
 import { useUserStore } from '@/stores/user'
+import { useRecordsStore } from '@/stores/records'
+import { useChallengesStore } from '@/stores/challenges'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { onMounted, onUnmounted, watch } from 'vue'
 
 const userStore = useUserStore()
+const recordsStore = useRecordsStore()
+const challengesStore = useChallengesStore()
 const router = useRouter()
 
+let recordsUnwatch = null
+let challengesUnwatch = null
+
 // 初始化时检查认证状态
-userStore.checkAuth()
+const authResult = userStore.checkAuth()
+console.log('App.vue - 初始化认证结果:', authResult)
+
+// 在应用挂载时设置用户状态监听
+onMounted(() => {
+  // 先检查认证状态，确保用户信息已加载
+  userStore.checkAuth()
+  
+  // 延迟设置监听器，确保用户信息已完全加载
+  setTimeout(() => {
+    // 强制检查并重新加载用户数据
+    recordsStore.checkAndReloadUserData()
+    challengesStore.checkAndReloadUserData()
+    
+    // 设置用户相关的数据存储监听器
+    recordsUnwatch = recordsStore.initRecordsStore()
+    challengesUnwatch = challengesStore.initChallengesStore()
+  }, 200)
+})
+
+// 在应用卸载时清理监听器
+onUnmounted(() => {
+  if (recordsUnwatch) {
+    recordsUnwatch()
+  }
+  if (challengesUnwatch) {
+    challengesUnwatch()
+  }
+})
+
+// 监听路由变化，确保用户数据正确加载
+watch(
+  () => router.currentRoute.value.path,
+  () => {
+    // 在每次路由变化时检查用户数据
+    setTimeout(() => {
+      recordsStore.checkAndReloadUserData()
+      challengesStore.checkAndReloadUserData()
+    }, 50)
+  }
+)
 
 const handleUserAction = (command) => {
   switch (command) {
@@ -178,7 +226,11 @@ const handleLogout = () => {
   ).then(() => {
     userStore.logout()
     ElMessage.success('已退出登录')
-    router.push('/login')
+    
+    // 延迟跳转，确保状态更新完成
+    setTimeout(() => {
+      router.push('/login')
+    }, 100)
   }).catch(() => {
     // 用户取消
   })

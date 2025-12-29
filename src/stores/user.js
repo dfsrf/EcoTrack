@@ -44,7 +44,7 @@ export const useUserStore = defineStore('user', () => {
       if (email && password) {
         // 模拟成功登录
         const userData = {
-          id: 'user_' + Date.now(),
+          id: 'user_' + email.replace(/[^a-zA-Z0-9]/g, '_'), // 使用email作为唯一标识
           name: credentials.name || email.split('@')[0],
           email: email,
           avatar: '/avatars/default.jpg',
@@ -64,6 +64,7 @@ export const useUserStore = defineStore('user', () => {
         localStorage.setItem('userToken', token.value)
         localStorage.setItem('userInfo', JSON.stringify(userData))
         
+        // 触发重新加载用户数据（如果需要）
         return { success: true, message: '登录成功' }
       } else {
         return { success: false, message: '邮箱和密码不能为空' }
@@ -97,6 +98,8 @@ export const useUserStore = defineStore('user', () => {
   }
 
   const logout = () => {
+    // 不删除用户的记录数据，保留数据持久化
+    // 只是清理当前会话的认证信息
     isAuthenticated.value = false
     token.value = null
     userInfo.value = {
@@ -108,8 +111,9 @@ export const useUserStore = defineStore('user', () => {
       level: 1
     }
     points.value = 0
+    badges.value = badges.value.map(badge => ({ ...badge, obtained: false }))
     
-    // 清除localStorage
+    // 清除认证信息
     localStorage.removeItem('userToken')
     localStorage.removeItem('userInfo')
   }
@@ -126,6 +130,7 @@ export const useUserStore = defineStore('user', () => {
         points.value = 100 // 模拟一些初始积分
         return true
       } catch (error) {
+        console.error('User Store - 检查认证失败:', error)
         logout()
         return false
       }

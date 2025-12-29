@@ -55,11 +55,15 @@ router.beforeEach((to, from, next) => {
     document.title = `${to.meta.title} - EcoTrack`
   }
   
-  // 检查认证状态
-  const isAuthenticated = userStore.isAuthenticated || userStore.checkAuth()
+  // 检查认证状态，确保用户信息是最新的
+  const hasValidToken = localStorage.getItem('userToken')
+  const hasUserInfo = localStorage.getItem('userInfo')
+  const isAuthenticated = hasValidToken && hasUserInfo
   
   // 需要认证但未登录，重定向到登录页
   if (to.meta.requiresAuth && !isAuthenticated) {
+    // 确保用户状态被重置
+    userStore.isAuthenticated = false
     next({ name: 'login', query: { redirect: to.fullPath } })
     return
   }

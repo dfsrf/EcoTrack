@@ -26,7 +26,7 @@
       <div class="eco-card p-4">
         <div class="text-center">
           <div class="text-2xl font-bold text-eco-dark">
-            {{ recordsStore.todayCarbon.toFixed(2) }} kg
+            {{ (recordsStore.todayCarbon || 0).toFixed(2) }} kg
           </div>
           <div class="text-sm text-gray-600">今日排放</div>
         </div>
@@ -35,7 +35,7 @@
       <div class="eco-card p-4">
         <div class="text-center">
           <div class="text-2xl font-bold text-eco-dark">
-            {{ recordsStore.weekCarbon.toFixed(2) }} kg
+            {{ (recordsStore.weekCarbon || 0).toFixed(2) }} kg
           </div>
           <div class="text-sm text-gray-600">本周排放</div>
         </div>
@@ -44,7 +44,7 @@
       <div class="eco-card p-4">
         <div class="text-center">
           <div class="text-2xl font-bold text-eco-dark">
-            {{ recordsStore.monthCarbon.toFixed(2) }} kg
+            {{ (recordsStore.monthCarbon || 0).toFixed(2) }} kg
           </div>
           <div class="text-sm text-gray-600">本月排放</div>
         </div>

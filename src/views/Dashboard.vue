@@ -151,9 +151,14 @@
     </div>
 
     <!-- 快速记录对话框 -->
-    <el-dialog v-model="quickRecordVisible" title="快速记录" width="600px">
+    <el-dialog 
+      v-model="quickRecordVisible" 
+      title="快速记录" 
+      width="600px"
+    >
       <div class="p-4">
         <QuickRecordForm 
+          :initial-category="selectedCategory"
           @success="handleQuickRecordSuccess" 
           @cancel="quickRecordVisible = false"
         />
@@ -163,7 +168,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, nextTick } from 'vue'
 import { useUserStore } from '@/stores/user'
 import { useRecordsStore } from '@/stores/records'
 import { ElMessage } from 'element-plus'
@@ -176,6 +181,7 @@ const recordsStore = useRecordsStore()
 
 // 快速记录相关
 const quickRecordVisible = ref(false)
+const selectedCategory = ref('')
 
 // 快速记录分类
 const quickRecordCategories = [
@@ -256,11 +262,13 @@ const getProgressColor = (carbon) => {
 }
 
 const openQuickRecord = (category) => {
+  selectedCategory.value = category
   quickRecordVisible.value = true
 }
 
+
+
 const handleQuickRecordSuccess = (record) => {
-  console.log('快速记录成功:', record)
   ElMessage.success('碳足迹记录成功！')
   quickRecordVisible.value = false
 }
